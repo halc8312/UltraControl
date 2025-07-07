@@ -1,78 +1,153 @@
 // packages/ultracontrol-app/src/lib/store/index.ts
-import { atom } from 'nanostores';
+import { atom, map } from 'nanostores';
+import { persistentAtom, persistentMap } from '@nanostores/persistent';
+import type {
+  BoltSession,
+  DevinTask,
+  OpenHandsAgent,
+  Notification,
+  IntegratedWorkspace,
+  UserPreferences,
+  Theme,
+} from './types';
 
-// 例: アプリケーション全体のローディング状態
+// --- Core Application State ---
 export const isLoading = atom(false);
+// export const currentUser = atom<string | null>(null); // Replaced with persistentAtom
+export const currentUser = persistentAtom<string | null>('currentUser', null); // Persisted
 
-// 例: 現在のユーザー情報
-export const currentUser = atom<string | null>(null);
+// --- Project Specific Stores ---
 
-// 今後、各プロジェクト (bolt, devin, openhands) の状態や
-// 共通のUI状態などを管理するストアをここに追加していく予定です。
-
-// --- bolt.new-any-llm-main 関連のストア ---
-export const boltSessions = atom<Array<any>>([]); // 仮の型定義
+// bolt.new-any-llm-main
+export const boltSessions = atom<BoltSession[]>([]);
 export const activeBoltSessionId = atom<string | null>(null);
 
-// --- devin-clone-mvp 関連のストア ---
-export const devinTasks = atom<Array<any>>([]); // 仮の型定義
-export const currentDevinTask = atom<object | null>(null);
+// devin-clone-mvp
+export const devinTasks = atom<DevinTask[]>([]);
+export const activeDevinTaskId = atom<string | null>(null);
 
-// --- OpenHands-main 関連のストア ---
-export const openHandsAgents = atom<Array<any>>([]); // 仮の型定義
+// OpenHands-main
+export const openHandsAgents = atom<OpenHandsAgent[]>([]);
 export const activeOpenHandsAgentId = atom<string | null>(null);
 
-// --- UI関連の共通ストア ---
-export const currentTheme = atom<'light' | 'dark'>('light');
-export const notifications = atom<Array<{id: string, message: string, type: 'info' | 'warning' | 'error'}>>([]);
+// --- UI and User Preferences ---
+// export const userPreferences = map<UserPreferences>({
+//   theme: 'system', // Default theme
+// });
+export const userPreferences = persistentMap<UserPreferences>('userPreferences:', { // Colon for prefixing keys in localStorage
+  theme: 'system',
+});
+export const notifications = atom<Notification[]>([]);
 
-// --- 統合機能関連のストア ---
-export const integratedWorkspaceState = atom<object | null>(null);
+// --- Integrated Workspace State ---
+export const integratedWorkspace = map<IntegratedWorkspace>({
+  activeProjectId: null,
+});
 
-/**
- * ローディング状態を設定/解除するヘルパー関数
- * @param loading ローディング状態
- */
-export const setLoading = (loading: boolean) => {
-  isLoading.set(loading);
+// --- Helper Functions / Actions ---
+
+// Loading State
+export const setLoading = (loading: boolean) => isLoading.set(loading);
+
+// User State
+export const setUser = (userId: string | null) => currentUser.set(userId);
+
+// Bolt Session Management
+export const addBoltSession = (session: BoltSession) => {
+  boltSessions.set([...boltSessions.get(), session]);
+};
+export const removeBoltSession = (sessionId: string) => {
+  boltSessions.set(boltSessions.get().filter(s => s.id !== sessionId));
+  if (activeBoltSessionId.get() === sessionId) {
+    activeBoltSessionId.set(null);
+  }
+};
+export const setActiveBoltSession = (sessionId: string | null) => {
+  activeBoltSessionId.set(sessionId);
+};
+export const updateBoltSession = (updatedSession: Partial<BoltSession> & Pick<BoltSession, 'id'>) => {
+  boltSessions.set(
+    boltSessions.get().map(s => s.id === updatedSession.id ? { ...s, ...updatedSession } : s)
+  );
 };
 
-/**
- * ユーザー情報を設定するヘルパー関数
- * @param userId ユーザーID または null
- */
-export const setUser = (userId: string | null) => {
-  currentUser.set(userId);
+// Devin Task Management
+export const addDevinTask = (task: DevinTask) => {
+  devinTasks.set([...devinTasks.get(), task]);
+};
+export const updateDevinTask = (updatedTask: Partial<DevinTask> & Pick<DevinTask, 'id'>) => {
+  devinTasks.set(
+    devinTasks.get().map(t => t.id === updatedTask.id ? { ...t, ...updatedTask } : t)
+  );
+};
+export const removeDevinTask = (taskId: string) => {
+  devinTasks.set(devinTasks.get().filter(t => t.id !== taskId));
+  if (activeDevinTaskId.get() === taskId) {
+    activeDevinTaskId.set(null);
+  }
+};
+export const setActiveDevinTask = (taskId: string | null) => {
+  activeDevinTaskId.set(taskId);
 };
 
-/**
- * 通知を追加するヘルパー関数
- * @param message 通知メッセージ
- * @param type 通知タイプ
- */
-export const addNotification = (message: string, type: 'info' | 'warning' | 'error' = 'info') => {
-  const newNotification = { id: Date.now().toString(), message, type };
+// OpenHands Agent Management
+export const addOpenHandsAgent = (agent: OpenHandsAgent) => {
+  openHandsAgents.set([...openHandsAgents.get(), agent]);
+};
+export const updateOpenHandsAgent = (updatedAgent: Partial<OpenHandsAgent> & Pick<OpenHandsAgent, 'id'>) => {
+  openHandsAgents.set(
+    openHandsAgents.get().map(a => a.id === updatedAgent.id ? { ...a, ...updatedAgent } : a)
+  );
+};
+export const removeOpenHandsAgent = (agentId: string) => {
+  openHandsAgents.set(openHandsAgents.get().filter(a => a.id !== agentId));
+  if (activeOpenHandsAgentId.get() === agentId) {
+    activeOpenHandsAgentId.set(null);
+  }
+};
+export const setActiveOpenHandsAgent = (agentId: string | null) => {
+  activeOpenHandsAgentId.set(agentId);
+};
+
+
+// Notifications
+export const addNotification = (message: string, type: Notification['type'] = 'info', timeout: number = 5000) => {
+  const newNotification: Notification = {
+    id: Date.now().toString() + Math.random().toString(36).substring(2,9), // More unique ID
+    message,
+    type,
+    timestamp: Date.now(),
+  };
   notifications.set([...notifications.get(), newNotification]);
-};
 
-/**
- * 通知を削除するヘルパー関数
- * @param id 削除する通知のID
- */
+  if (timeout > 0) {
+    setTimeout(() => removeNotification(newNotification.id), timeout);
+  }
+  return newNotification.id;
+};
 export const removeNotification = (id: string) => {
   notifications.set(notifications.get().filter(n => n.id !== id));
 };
+export const clearNotifications = () => notifications.set([]);
 
-// 各プロジェクトのストア操作ヘルパーもここに追加していく
-// 例:
-// export const addBoltSession = (session: any) => {
-//   boltSessions.set([...boltSessions.get(), session]);
-// };
-//
-// export const setActiveBoltSession = (sessionId: string) => {
-//   activeBoltSessionId.set(sessionId);
-// };
 
-// ... 他のプロジェクトのヘルパー関数も同様に ...
+// User Preferences
+export const setTheme = (theme: Theme) => {
+  userPreferences.setKey('theme', theme);
+  // Potentially apply theme to DOM here e.g. document.documentElement.className
+};
 
-console.log('Nanostores initialized for UltraControl');
+// Integrated Workspace
+export const setActiveIntegratedProject = (projectId: string | null) => {
+  integratedWorkspace.setKey('activeProjectId', projectId);
+};
+
+
+console.log('Nanostores for UltraControl initialized with new structure.');
+
+// Example usage (for testing, can be removed)
+// addBoltSession({ id: 'bolt-1', name: 'My Bolt Session' });
+// addDevinTask({ id: 'devin-1', title: 'Implement feature X', description: '...', status: 'pending' });
+// addOpenHandsAgent({ id: 'oha-1', name: 'Code Generator', status: 'idle' });
+// addNotification('Welcome to UltraControl!', 'info');
+// setTheme('dark');

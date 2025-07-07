@@ -11,6 +11,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@nanostores/persistent": "^1.1.0",
     "nanostores": "^0.10.3"
   }
 }
