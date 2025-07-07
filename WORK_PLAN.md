@@ -135,3 +135,35 @@ UltraControlは、単に3つのツール（bolt.new-any-llm-main、devin-clone-m
 - **ドキュメント不足**: 開発と並行した文書化
 
 この計画は、真の統合による新しい価値創造を目指し、段階的かつ着実に実装を進めることで、革新的なAI開発環境を実現します。
+
+## Implementation Steps (2025-07-11)
+
+### 1. Event Bus Implementation
+- **Goal:** Provide a lightweight, typed event dispatching mechanism shared across all packages.
+- **Deliverables:**
+  - New package `packages/event-bus` exporting a singleton `eventBus` based on Node.js `EventEmitter` with TypeScript typings.
+  - Core events: `STATE_UPDATED`, `WS_MESSAGE`, `ERROR`.
+  - Utility helpers: `on`, `off`, `emit`, with generic typing support.
+  - Jest unit tests covering subscription, emission, and unsubscription.
+
+### 2. Real-Time State Synchronisation (WebSocket)
+- **Goal:** Bridge Nanostores with the existing WebSocket layer to propagate state changes live across projects.
+- **Deliverables:**
+  - Extend `ws-client-provider.tsx` to listen for `state:update` messages and dispatch to `eventBus`.
+  - Implement `packages/ultracontrol-app/src/lib/sync/stateSync.ts` that subscribes to `eventBus` and patches Nanostores.
+  - Define JSON schema for state diff messages.
+
+### 3. WebContainer Initialisation Error Handling
+- **Goal:** Fail gracefully and inform the user when WebContainer fails to boot.
+- **Deliverables:**
+  - Wrap WebContainer boot logic in try/catch within `utils/shell.ts`.
+  - Emit `ERROR` event through `eventBus` and display UI toast in Workbench.
+
+### Schedule & Ownership
+| Task | Owner | ETA |
+|------|-------|-----|
+| Event Bus | Jules | 0.5d |
+| State Sync | Jules | 1d |
+| Error Handling | Jules | 0.5d |
+
+> NOTE: Detailed design docs will be added to `docs/architecture` after initial spike.
