@@ -5,23 +5,45 @@
 import type { IPromptChain, ILLMProvider } from './interfaces';
 import type { PromptParameters, CompletionResponse } from './types';
 
-interface ChainStep {
+// --- Step Type Definitions ---
+interface SequentialStep {
+  type: 'sequential';
   name: string;
   promptFn: (context: any) => Promise<PromptParameters>;
 }
+
+interface ParallelTask {
+  nameSuffix: string; // e.g., "_taskA", "_taskB" to form full name like "groupName_taskA"
+  promptFn: (context: any) => Promise<PromptParameters>;
+}
+interface ParallelStepGroup {
+  type: 'parallel';
+  name: string; // Name for the whole group, e.g., "analyzeSources"
+  tasks: ParallelTask[];
+}
+
+type AnyChainStep = SequentialStep | ParallelStepGroup;
+// --- End Step Type Definitions ---
 
 /**
  * プロンプトチェーンの実装クラス
  */
 export class PromptChain implements IPromptChain {
-  private steps: ChainStep[] = [];
+  private steps: AnyChainStep[] = []; // Changed type
   private currentStepIndex = 0;
 
   /**
-   * チェーンへのステップ追加
+   * チェーンへのステップ追加 (SequentialStep)
    */
   addStep(name: string, promptFn: (context: any) => Promise<PromptParameters>): void {
-    this.steps.push({ name, promptFn });
+    this.steps.push({ type: 'sequential', name, promptFn });
+  }
+
+  /**
+   * チェーンへのステップ追加 (Generic, used by builder)
+   */
+  protected addAnyStep(step: AnyChainStep): void {
+    this.steps.push(step);
   }
 
   /**
@@ -31,43 +53,95 @@ export class PromptChain implements IPromptChain {
     provider: ILLMProvider,
     initialContext: any = {}
   ): AsyncIterableIterator<{
-    step: string;
-    result: CompletionResponse;
+    step: string; // Name of the sequential step or parallel group
+    subStep?: string; // Name of the individual task within a parallel group (not used in this yield structure)
+    result?: CompletionResponse; // Undefined for the parallel group yield itself
+    results?: Record<string, CompletionResponse>; // For parallel group results
     context: any;
   }> {
     let context = { ...initialContext };
-    this.currentStepIndex = 0;
+    this.currentStepIndex = 0; // Tracks the main step index (group or sequential)
 
     for (const step of this.steps) {
-      try {
-        // 現在のコンテキストでプロンプトパラメータを生成
-        const promptParams = await step.promptFn(context);
-        
-        // LLMプロバイダーでの実行
-        const result = await provider.complete(promptParams);
-        
-        // コンテキストの更新
-        context = {
-          ...context,
-          [`${step.name}_result`]: result,
-          [`${step.name}_output`]: result.text,
-          previousStep: step.name,
-          previousOutput: result.text
-        };
+      this.currentStepIndex++; // Increment for each top-level step (sequential or parallel group)
+      if (step.type === 'sequential') {
+        try {
+          const promptParams = await step.promptFn(context);
+          const result = await provider.complete(promptParams);
+          const outputText = result.choices[0]?.message.content;
+          context = {
+            ...context,
+            [`${step.name}_result`]: result,
+            [`${step.name}_output`]: outputText,
+            previousStep: step.name,
+            previousOutput: outputText,
+          };
+          yield { step: step.name, result, context: { ...context } };
+        } catch (error) {
+          throw new Error(
+            `Chain execution failed at sequential step "${step.name}": ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+      } else if (step.type === 'parallel') {
+        try {
+          const parallelPromises = step.tasks.map(async (task) => {
+            const taskFullName = `${step.name}${task.nameSuffix}`;
+            const promptParams = await task.promptFn(context); // Pass current context to each parallel task
+            const result = await provider.complete(promptParams);
+            return { taskFullName, result };
+          });
 
-        // 結果を yield
-        yield {
-          step: step.name,
-          result,
-          context: { ...context }
-        };
+          // Wait for all parallel tasks to settle (either complete or fail)
+          const settledResults = await Promise.allSettled(parallelPromises);
 
-        this.currentStepIndex++;
-      } catch (error) {
-        // エラーハンドリング
-        throw new Error(
-          `Chain execution failed at step "${step.name}": ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
+          const groupResults: Record<string, CompletionResponse> = {};
+          let hasErrorInGroup = false;
+          const errors: string[] = [];
+
+          // Process results and update context
+          for (const settledResult of settledResults) {
+            if (settledResult.status === 'fulfilled') {
+              const { taskFullName, result } = settledResult.value;
+              groupResults[taskFullName] = result;
+              context = {
+                ...context,
+                [`${taskFullName}_result`]: result,
+                [`${taskFullName}_output`]: result.choices[0]?.message.content,
+              };
+            } else {
+              hasErrorInGroup = true;
+              // Storing error. Task name might not be easily available here if promise was constructed anonymously.
+              // For simplicity, just collecting messages.
+              errors.push(settledResult.reason instanceof Error ? settledResult.reason.message : String(settledResult.reason));
+            }
+          }
+
+          if (hasErrorInGroup) {
+            // If any task in the parallel group failed, throw a group error
+            throw new Error(
+              `One or more tasks failed in parallel group "${step.name}". Errors: ${errors.join('; ')}`
+            );
+          }
+
+          // Update context with previousStep pointing to the group name
+          context = {
+            ...context,
+            previousStep: step.name,
+            // previousOutput for a group could be a summary or concatenated outputs.
+            // For now, it's not set at the group level, only for individual tasks.
+            // Or, one could decide to store all outputs:
+            // previousOutput: Object.fromEntries(Object.entries(groupResults).map(([k,v]) => [k, v.choices[0]?.message.content]))
+          };
+
+          // Yield a single result for the entire parallel group
+          yield { step: step.name, results: groupResults, context: { ...context } };
+
+        } catch (error) {
+          // Catch errors from Promise.allSettled processing or the re-thrown group error
+          throw new Error(
+            `Chain execution failed at parallel group "${step.name}": ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
       }
     }
   }
@@ -96,12 +170,12 @@ export class PromptChain implements IPromptChain {
   /**
    * 特定のステップを取得
    */
-  getStep(index: number): ChainStep | undefined {
+  getStep(index: number): AnyChainStep | undefined { // Return type changed
     return this.steps[index];
   }
 
   /**
-   * すべてのステップ名を取得
+   * すべてのステップ名を取得 (sequential steps and parallel group names)
    */
   getStepNames(): string[] {
     return this.steps.map(step => step.name);
@@ -120,49 +194,53 @@ export class PromptChainBuilder {
   }
 
   /**
-   * ステップを追加
+   * 順次ステップを追加
    */
   step(name: string, promptFn: (context: any) => Promise<PromptParameters>): this {
-    this.chain.addStep(name, promptFn);
+    this.chain.addAnyStep({ type: 'sequential', name, promptFn });
     return this;
   }
 
   /**
-   * 条件付きステップを追加
+   * 条件付きステップを追加 (順次ステップとして実装)
    */
   conditionalStep(
     name: string,
     condition: (context: any) => boolean,
     promptFn: (context: any) => Promise<PromptParameters>
   ): this {
-    this.chain.addStep(name, async (context) => {
+    const conditionalPromptFn = async (context: any) => {
       if (!condition(context)) {
-        // 条件を満たさない場合はスキップ
         return {
           messages: [{
             role: 'system' as const,
             content: `Step "${name}" skipped due to condition`
           }],
-          maxTokens: 1,
+          maxTokens: 1, // Minimal tokens for a skip message
           temperature: 0
         };
       }
       return promptFn(context);
-    });
+    };
+    this.chain.addAnyStep({ type: 'sequential', name, promptFn: conditionalPromptFn });
     return this;
   }
 
   /**
-   * 並列実行ステップを追加（将来の拡張用）
+   * 並列実行ステップグループを追加
+   * @param groupName - 並列グループ全体の名前
+   * @param tasks - 並列に実行するタスクのオブジェクト配列 { nameSuffix: string, promptFn: ... }
+   *                nameSuffix は groupName に付加され、ユニークなタスク名を形成します (例: groupName_suffix)
    */
   parallelSteps(
-    name: string,
-    ...promptFns: Array<(context: any) => Promise<PromptParameters>>
+    groupName: string,
+    tasks: Array<{ nameSuffix: string; promptFn: (context: any) => Promise<PromptParameters> }>
   ): this {
-    // 現在は順次実行として実装
-    promptFns.forEach((fn, index) => {
-      this.chain.addStep(`${name}_parallel_${index}`, fn);
-    });
+    if (tasks.length === 0) {
+      console.warn(`PromptChainBuilder: parallelSteps called for group "${groupName}" with no tasks. Skipping.`);
+      return this;
+    }
+    this.chain.addAnyStep({ type: 'parallel', name: groupName, tasks });
     return this;
   }
 

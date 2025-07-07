@@ -6,6 +6,7 @@ import type { ILLMProvider, IProviderFactory } from './interfaces';
 import type { ProviderConfig, LLMProviderType } from './types';
 import { LLMError, LLMErrorType } from './types';
 import { AnthropicProvider } from './providers/anthropic';
+import { OpenAIProvider } from './providers/openai'; // OpenAIProviderをインポート
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('LLMProviderFactory');
@@ -73,9 +74,9 @@ export class LLMProviderFactory implements IProviderFactory {
    */
   private registerDefaultProviders(): void {
     this.register('anthropic', AnthropicProvider);
+    this.register('openai', OpenAIProvider); // OpenAIProviderを登録
     
     // 今後追加予定
-    // this.register('openai', OpenAIProvider);
     // this.register('cohere', CohereProvider);
     // this.register('ollama', OllamaProvider);
     // this.register('openai-like', OpenAILikeProvider);
