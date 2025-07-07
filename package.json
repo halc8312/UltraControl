@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "nanostores": "^0.10.3"
   }
 }

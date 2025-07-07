@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      nanostores:
+        specifier: ^0.10.3
+        version: 0.10.3
     devDependencies:
       typescript:
         specifier: ^5.0.0
