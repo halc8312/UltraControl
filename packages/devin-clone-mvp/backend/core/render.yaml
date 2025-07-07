@@ -1,0 +1,48 @@
+# MVP Configuration - Minimal setup for Render.com
+# Just connect your GitHub repo and set ANTHROPIC_API_KEY in the dashboard
+
+services:
+  # Backend API Service
+  - type: web
+    name: devin-clone-api
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      # Auto-configured values
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: devin-clone-db
+          property: connectionString
+      
+      # Only required manual setting - Add this in Render dashboard
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      
+      # Auto-configured URLs (update these after Vercel deployment)
+      - key: FRONTEND_URL
+        value: https://your-app.vercel.app
+      - key: BACKEND_CORS_ORIGINS
+        value: https://your-app.vercel.app
+      
+      # MVP: Disabled features (no setup required)
+      - key: NEXT_PUBLIC_ENABLE_PAYMENTS
+        value: false
+      - key: NEXT_PUBLIC_ENABLE_OAUTH
+        value: false
+        
+    autoDeploy: true
+    healthCheckPath: /api/v1/health
+
+databases:
+  # Auto-created PostgreSQL database
+  - name: devin-clone-db
+    databaseName: devinclone
+    user: devinclone
+    plan: starter

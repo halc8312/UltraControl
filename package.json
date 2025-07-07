@@ -1,0 +1,13 @@
+{
+  "name": "ultracontrol",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "echo \"Please run dev command in the specific package\""
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

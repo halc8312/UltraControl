@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基本テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Devin Clone - 基本テスト</h1>
+        <p>このページはNext.jsのレイアウトを使わない基本的なHTMLページです。</p>
+        
+        <div>
+            <button onclick="testBackend()">バックエンドテスト</button>
+            <button onclick="testFrontendAPI()">フロントエンドAPIテスト</button>
+            <button onclick="testGuestLogin()">ゲストログインテスト</button>
+        </div>
+        
+        <div id="result" class="result">
+            <strong>結果:</strong><br>
+            <span id="resultText">テストボタンをクリックしてください</span>
+        </div>
+    </div>
+
+    <script>
+        function updateResult(text) {
+            document.getElementById('resultText').innerHTML = text;
+        }
+
+        async function testBackend() {
+            updateResult('バックエンドをテスト中...');
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/guest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                updateResult(`✅ バックエンド成功!<br><br>ステータス: ${response.status}<br><br>レスポンス:<br><pre>${JSON.stringify(data, null, 2)}</pre>`);
+            } catch (error) {
+                updateResult(`❌ バックエンドエラー:<br>${error.message}`);
+            }
+        }
+
+        async function testFrontendAPI() {
+            updateResult('フロントエンドAPIをテスト中...');
+            try {
+                const response = await fetch('/api/auth/guest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                updateResult(`✅ フロントエンドAPI成功!<br><br>ステータス: ${response.status}<br><br>レスポンス:<br><pre>${JSON.stringify(data, null, 2)}</pre>`);
+            } catch (error) {
+                updateResult(`❌ フロントエンドAPIエラー:<br>${error.message}`);
+            }
+        }
+
+        async function testGuestLogin() {
+            updateResult('ゲストログインをテスト中...');
+            try {
+                // Step 1: Get guest credentials
+                const response = await fetch('/api/auth/guest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                updateResult(`✅ ゲストログイン成功!<br><br>ユーザー: ${data.email}<br><br>トークン取得完了<br><br><a href="/auth/signin">サインインページへ</a>`);
+            } catch (error) {
+                updateResult(`❌ ゲストログインエラー:<br>${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html> 
