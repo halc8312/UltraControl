@@ -1,0 +1,254 @@
+/* packages/ultracontrol-app/src/lib/ui/styles.css */
+
+/* CSS Reset and Base Styles */
+@layer base {
+  /* Custom properties from theme */
+  :root {
+    /* Light theme (default) */
+    --ui-color-primary: hsl(221.2 83.2% 53.3%);
+    --ui-color-secondary: hsl(210 40% 96.1%);
+    --ui-color-accent: hsl(280 65% 60%);
+    --ui-color-success: hsl(142.1 76.2% 36.3%);
+    --ui-color-warning: hsl(38 92% 50%);
+    --ui-color-danger: hsl(0 84.2% 60.2%);
+    --ui-color-info: hsl(199 89% 48%);
+    --ui-color-background: hsl(0 0% 100%);
+    --ui-color-foreground: hsl(222.2 47.4% 11.2%);
+    --ui-color-card: hsl(0 0% 100%);
+    --ui-color-card-foreground: hsl(222.2 47.4% 11.2%);
+    --ui-color-popover: hsl(0 0% 100%);
+    --ui-color-popover-foreground: hsl(222.2 47.4% 11.2%);
+    --ui-color-border: hsl(214.3 31.8% 91.4%);
+    --ui-color-input: hsl(214.3 31.8% 91.4%);
+    --ui-color-ring: hsl(221.2 83.2% 53.3%);
+    --ui-color-muted: hsl(210 40% 96.1%);
+    --ui-color-muted-foreground: hsl(215.4 16.3% 46.9%);
+    --ui-color-destructive: hsl(0 84.2% 60.2%);
+    --ui-color-destructive-foreground: hsl(0 0% 98%);
+    
+    /* Spacing */
+    --ui-spacing-xs: 0.5rem;
+    --ui-spacing-sm: 0.75rem;
+    --ui-spacing-md: 1rem;
+    --ui-spacing-lg: 1.5rem;
+    --ui-spacing-xl: 2rem;
+    --ui-spacing-2xl: 3rem;
+    --ui-spacing-3xl: 4rem;
+    --ui-spacing-4xl: 6rem;
+    
+    /* Font sizes */
+    --ui-font-size-xs: 0.75rem;
+    --ui-font-size-sm: 0.875rem;
+    --ui-font-size-base: 1rem;
+    --ui-font-size-lg: 1.125rem;
+    --ui-font-size-xl: 1.25rem;
+    --ui-font-size-2xl: 1.5rem;
+    --ui-font-size-3xl: 1.875rem;
+    --ui-font-size-4xl: 2.25rem;
+    --ui-font-size-5xl: 3rem;
+    
+    /* Border radius */
+    --ui-radius-none: 0;
+    --ui-radius-sm: 0.125rem;
+    --ui-radius-md: 0.375rem;
+    --ui-radius-lg: 0.5rem;
+    --ui-radius-xl: 0.75rem;
+    --ui-radius-2xl: 1rem;
+    --ui-radius-3xl: 1.5rem;
+    --ui-radius-full: 9999px;
+    
+    /* Fonts */
+    --ui-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --ui-font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+    --ui-font-mono: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+  
+  /* Dark theme */
+  [data-theme="dark"] {
+    --ui-color-primary: hsl(217.2 91.2% 59.8%);
+    --ui-color-secondary: hsl(217.2 32.6% 17.5%);
+    --ui-color-accent: hsl(280 65% 70%);
+    --ui-color-success: hsl(142.1 76.2% 45%);
+    --ui-color-warning: hsl(38 92% 55%);
+    --ui-color-danger: hsl(0 72.2% 50.6%);
+    --ui-color-info: hsl(199 89% 58%);
+    --ui-color-background: hsl(222.2 84% 4.9%);
+    --ui-color-foreground: hsl(210 40% 98%);
+    --ui-color-card: hsl(222.2 84% 8%);
+    --ui-color-card-foreground: hsl(210 40% 98%);
+    --ui-color-popover: hsl(222.2 84% 8%);
+    --ui-color-popover-foreground: hsl(210 40% 98%);
+    --ui-color-border: hsl(217.2 32.6% 17.5%);
+    --ui-color-input: hsl(217.2 32.6% 17.5%);
+    --ui-color-ring: hsl(224.3 76.3% 48%);
+    --ui-color-muted: hsl(217.2 32.6% 17.5%);
+    --ui-color-muted-foreground: hsl(215 20.2% 65.1%);
+    --ui-color-destructive: hsl(0 62.8% 30.6%);
+    --ui-color-destructive-foreground: hsl(0 85.7% 97.3%);
+  }
+  
+  /* Apply base styles */
+  * {
+    box-sizing: border-box;
+    border-color: var(--ui-color-border);
+  }
+  
+  html {
+    font-family: var(--ui-font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    margin: 0;
+    color: var(--ui-color-foreground);
+    background-color: var(--ui-color-background);
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  /* Animations */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes zoom-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes slide-in-from-top {
+    from {
+      transform: translateY(-10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slide-in-from-bottom {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  
+  .animate-in {
+    animation-duration: 200ms;
+    animation-fill-mode: both;
+  }
+  
+  .fade-in-0 {
+    animation-name: fade-in;
+  }
+  
+  .zoom-in-95 {
+    animation-name: zoom-in;
+  }
+  
+  .slide-in-from-top {
+    animation-name: slide-in-from-top;
+  }
+  
+  .slide-in-from-bottom {
+    animation-name: slide-in-from-bottom;
+  }
+  
+  /* Focus visible */
+  .focus-visible:focus-visible {
+    outline: 2px solid var(--ui-color-ring);
+    outline-offset: 2px;
+  }
+  
+  /* Disabled state */
+  .disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  /* Truncate text */
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* Screen reader only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+/* Component-specific overrides */
+@layer components {
+  /* Scrollbar styling */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-color-muted) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--ui-color-muted);
+    border-radius: var(--ui-radius-full);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--ui-color-muted-foreground);
+  }
+  
+  /* Selection styling */
+  ::selection {
+    background-color: var(--ui-color-primary);
+    color: white;
+    opacity: 0.3;
+  }
+}

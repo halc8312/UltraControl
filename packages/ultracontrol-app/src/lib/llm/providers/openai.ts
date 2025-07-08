@@ -97,6 +97,38 @@ export class OpenAIProvider extends BaseLLMProvider {
   // OpenAIのモデル情報 (主要なもののみ)
   // より多くのモデルはAPIから取得することを推奨
   private static readonly MODELS: LLMModel[] = [
+    // GPT-4.1 Models (2025年4月リリース)
+    {
+      id: 'gpt-4.1',
+      name: 'GPT-4.1',
+      provider: 'openai',
+      maxTokens: 16384,
+      contextWindow: 1000000, // 100万トークン
+      supportsFunctions: true,
+      supportsStreaming: true,
+      supportsTools: true,
+    },
+    {
+      id: 'gpt-4.1-mini',
+      name: 'GPT-4.1 Mini',
+      provider: 'openai',
+      maxTokens: 8192,
+      contextWindow: 1000000, // 100万トークン
+      supportsFunctions: true,
+      supportsStreaming: true,
+      supportsTools: true,
+    },
+    {
+      id: 'gpt-4.1-nano',
+      name: 'GPT-4.1 Nano',
+      provider: 'openai',
+      maxTokens: 4096,
+      contextWindow: 1000000, // 100万トークン
+      supportsFunctions: true,
+      supportsStreaming: true,
+      supportsTools: true,
+    },
+    // GPT-4o Models
     {
       id: 'gpt-4o',
       name: 'GPT-4o',
@@ -108,6 +140,17 @@ export class OpenAIProvider extends BaseLLMProvider {
       supportsTools: true,
     },
     {
+      id: 'gpt-4o-mini',
+      name: 'GPT-4o Mini',
+      provider: 'openai',
+      maxTokens: 4096,
+      contextWindow: 128000,
+      supportsFunctions: true,
+      supportsStreaming: true,
+      supportsTools: true,
+    },
+    // GPT-4 Models
+    {
       id: 'gpt-4-turbo',
       name: 'GPT-4 Turbo',
       provider: 'openai',
@@ -117,6 +160,17 @@ export class OpenAIProvider extends BaseLLMProvider {
       supportsStreaming: true,
       supportsTools: true,
     },
+    {
+      id: 'gpt-4',
+      name: 'GPT-4',
+      provider: 'openai',
+      maxTokens: 8192,
+      contextWindow: 8192,
+      supportsFunctions: true,
+      supportsStreaming: true,
+      supportsTools: true,
+    },
+    // GPT-3.5 Models
     {
       id: 'gpt-3.5-turbo',
       name: 'GPT-3.5 Turbo',

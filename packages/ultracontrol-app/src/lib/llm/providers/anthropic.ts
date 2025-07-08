@@ -83,6 +83,28 @@ export class AnthropicProvider extends BaseLLMProvider {
 
   // Anthropicのモデル情報
   private static readonly MODELS: LLMModel[] = [
+    // Claude 4 Models (2025年5月リリース)
+    {
+      id: 'claude-opus-4-20250514',
+      name: 'Claude Opus 4',
+      provider: 'anthropic',
+      maxTokens: 8192,
+      contextWindow: 1000000, // 100万トークン
+      supportsFunctions: true,
+      supportsStreaming: true,
+      supportsTools: true
+    },
+    {
+      id: 'claude-sonnet-4-20250514',
+      name: 'Claude Sonnet 4',
+      provider: 'anthropic',
+      maxTokens: 8192,
+      contextWindow: 1000000, // 100万トークン
+      supportsFunctions: true,
+      supportsStreaming: true,
+      supportsTools: true
+    },
+    // Claude 3.5 Models
     {
       id: 'claude-3-5-sonnet-latest',
       name: 'Claude 3.5 Sonnet (Latest)',
@@ -113,6 +135,7 @@ export class AnthropicProvider extends BaseLLMProvider {
       supportsStreaming: true,
       supportsTools: false
     },
+    // Claude 3 Models
     {
       id: 'claude-3-opus-latest',
       name: 'Claude 3 Opus (Latest)',

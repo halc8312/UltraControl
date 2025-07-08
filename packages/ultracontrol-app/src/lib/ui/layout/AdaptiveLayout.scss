@@ -1,0 +1,437 @@
+/**
+ * Adaptive Layout Styles
+ * 
+ * Responsive, context-aware layout system
+ */
+
+@import '@/styles/variables';
+@import '@/styles/mixins';
+
+.adaptive-layout {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--foreground);
+  overflow: hidden;
+  
+  // Layout container
+  .layout-container {
+    flex: 1;
+    display: grid;
+    position: relative;
+    overflow: hidden;
+    
+    // Grid templates for different presets
+    &:has(.preset-frontend-dev) {
+      grid-template-areas:
+        "sidebar main preview"
+        "sidebar terminal terminal";
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: 1fr auto;
+    }
+    
+    &:has(.preset-backend-dev) {
+      grid-template-areas:
+        "sidebar main logs"
+        "sidebar terminal terminal";
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: 1fr auto;
+    }
+    
+    &:has(.preset-fullstack) {
+      grid-template-areas:
+        "sidebar main preview agents"
+        "sidebar terminal terminal terminal";
+      grid-template-columns: auto 1fr auto auto;
+      grid-template-rows: 1fr auto;
+    }
+    
+    &:has(.preset-chat-focus) {
+      grid-template-areas:
+        "chat context"
+        "suggestions suggestions";
+      grid-template-columns: 1fr auto;
+      grid-template-rows: 1fr auto;
+    }
+    
+    &:has(.preset-mobile) {
+      grid-template-areas:
+        "toolbar"
+        "main"
+        "tabs";
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+    }
+  }
+  
+  // Layout regions
+  .layout-region {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    
+    &.region-main {
+      grid-area: main;
+      min-width: 0;
+      min-height: 0;
+    }
+    
+    &.region-sidebar {
+      background: var(--sidebar-background);
+      border-right: 1px solid var(--border);
+      
+      &.position-left {
+        grid-area: sidebar;
+      }
+    }
+    
+    &.region-panel {
+      background: var(--panel-background);
+      
+      &.position-right {
+        border-left: 1px solid var(--border);
+        
+        &.region-preview {
+          grid-area: preview;
+        }
+        
+        &.region-logs {
+          grid-area: logs;
+        }
+        
+        &.region-agents {
+          grid-area: agents;
+        }
+        
+        &.region-context {
+          grid-area: context;
+        }
+      }
+      
+      &.position-bottom {
+        border-top: 1px solid var(--border);
+        
+        &.region-terminal {
+          grid-area: terminal;
+        }
+        
+        &.region-suggestions {
+          grid-area: suggestions;
+        }
+        
+        &.region-tabs {
+          grid-area: tabs;
+        }
+      }
+    }
+    
+    &.region-toolbar {
+      grid-area: toolbar;
+      background: var(--toolbar-background);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+    }
+    
+    // Collapsed state
+    &.collapsed {
+      .region-content-wrapper {
+        display: none;
+      }
+      
+      .collapse-toggle {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        
+        &:hover {
+          background: var(--hover-background);
+        }
+      }
+      
+      &.position-left {
+        width: 2rem !important;
+        
+        .collapse-toggle {
+          right: 0.25rem;
+        }
+      }
+      
+      &.position-right {
+        width: 2rem !important;
+        
+        .collapse-toggle {
+          left: 0.25rem;
+        }
+      }
+      
+      &.position-bottom {
+        height: 2rem !important;
+        
+        .collapse-toggle {
+          top: 0.25rem;
+          transform: none;
+        }
+      }
+    }
+    
+    // Resizing state
+    &.resizing {
+      user-select: none;
+      
+      .resize-handle {
+        background: var(--primary);
+      }
+    }
+    
+    // Dragging state
+    &.dragging {
+      opacity: 0.5;
+    }
+  }
+  
+  // Region content wrapper
+  .region-content-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 1rem;
+    
+    .region-main & {
+      padding: 0;
+    }
+  }
+  
+  // Collapse toggle button
+  .collapse-toggle {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    background: var(--button-background);
+    color: var(--foreground);
+    cursor: pointer;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    z-index: 10;
+    
+    &:hover {
+      background: var(--button-hover-background);
+    }
+  }
+  
+  // Resize handle
+  .resize-handle {
+    position: absolute;
+    background: transparent;
+    transition: background 0.2s;
+    z-index: 5;
+    
+    &:hover {
+      background: var(--resize-handle-hover);
+    }
+    
+    .position-left & {
+      right: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      cursor: ew-resize;
+    }
+    
+    .position-right & {
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      cursor: ew-resize;
+    }
+    
+    .position-bottom & {
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 4px;
+      cursor: ns-resize;
+    }
+  }
+  
+  // Layout switcher
+  .layout-switcher {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 100;
+    
+    .layout-switcher-toggle {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s;
+      
+      &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      }
+    }
+    
+    .layout-switcher-menu {
+      position: absolute;
+      bottom: 4rem;
+      right: 0;
+      background: var(--dropdown-background);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      min-width: 300px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      
+      h3 {
+        margin: 0 0 1rem 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      
+      .preset-option {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.75rem;
+        margin: 0.25rem 0;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        
+        strong {
+          display: block;
+          margin-bottom: 0.25rem;
+        }
+        
+        span {
+          font-size: 0.875rem;
+          color: var(--muted-foreground);
+        }
+        
+        &:hover {
+          background: var(--hover-background);
+          border-color: var(--border);
+        }
+        
+        &.active {
+          background: var(--primary-background);
+          border-color: var(--primary);
+          
+          strong {
+            color: var(--primary);
+          }
+        }
+      }
+    }
+  }
+  
+  // Screen size specific styles
+  &.screen-mobile {
+    .layout-switcher {
+      bottom: 4.5rem;
+      right: 1rem;
+      
+      .layout-switcher-toggle {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.25rem;
+      }
+    }
+    
+    .resize-handle {
+      display: none;
+    }
+    
+    .collapse-toggle {
+      display: none;
+    }
+  }
+  
+  &.screen-tablet {
+    .layout-container {
+      // Simplified grid for tablets
+      grid-template-areas:
+        "main"
+        "bottom";
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto;
+    }
+  }
+  
+  // Dark theme adjustments
+  &[data-theme="dark"] {
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+    --sidebar-background: #111111;
+    --panel-background: #0f0f0f;
+    --toolbar-background: #161616;
+    --border: #262626;
+    --button-background: #262626;
+    --button-hover-background: #404040;
+    --hover-background: #1a1a1a;
+    --resize-handle-hover: rgba(255, 255, 255, 0.1);
+    --dropdown-background: #1a1a1a;
+    --primary-background: rgba(34, 197, 94, 0.1);
+  }
+  
+  // Light theme adjustments
+  &[data-theme="light"] {
+    --background: #ffffff;
+    --foreground: #0a0a0a;
+    --sidebar-background: #f9fafb;
+    --panel-background: #f3f4f6;
+    --toolbar-background: #ffffff;
+    --border: #e5e7eb;
+    --button-background: #f3f4f6;
+    --button-hover-background: #e5e7eb;
+    --hover-background: #f9fafb;
+    --resize-handle-hover: rgba(0, 0, 0, 0.1);
+    --dropdown-background: #ffffff;
+    --primary-background: rgba(34, 197, 94, 0.05);
+  }
+}
+
+// Utility classes
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}

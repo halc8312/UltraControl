@@ -1,0 +1,74 @@
+{
+  "id": "hello-world",
+  "name": "Hello World Plugin",
+  "version": "1.0.0",
+  "description": "A simple example plugin that demonstrates the plugin API",
+  "author": {
+    "name": "UltraControl Team",
+    "email": "team@ultracontrol.dev"
+  },
+  "main": "index.ts",
+  "type": "hybrid",
+  "engine": {
+    "ultracontrol": "1.0.0"
+  },
+  "permissions": [
+    "ui:render",
+    "events:listen",
+    "events:emit",
+    "state:read"
+  ],
+  "capabilities": [
+    "ui-extension",
+    "command-provider"
+  ],
+  "ui": {
+    "components": ["HelloWorldPanel"],
+    "commands": [
+      {
+        "id": "sayHello",
+        "title": "Say Hello",
+        "category": "Hello World",
+        "keybinding": "ctrl+alt+h",
+        "handler": "sayHello"
+      },
+      {
+        "id": "showInfo",
+        "title": "Show Plugin Info",
+        "category": "Hello World",
+        "handler": "showInfo"
+      }
+    ],
+    "panels": [
+      {
+        "id": "helloPanel",
+        "title": "Hello World",
+        "component": "HelloWorldPanel",
+        "position": "right",
+        "defaultSize": 300,
+        "minSize": 200
+      }
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "greeting": {
+        "type": "string",
+        "default": "Hello",
+        "description": "The greeting to use"
+      },
+      "showTimestamp": {
+        "type": "boolean",
+        "default": true,
+        "description": "Whether to show timestamps in messages"
+      },
+      "messageColor": {
+        "type": "string",
+        "enum": ["default", "primary", "success", "warning", "error"],
+        "default": "primary",
+        "description": "Color scheme for messages"
+      }
+    }
+  }
+}
