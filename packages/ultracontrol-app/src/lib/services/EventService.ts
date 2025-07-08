@@ -305,5 +305,3 @@ export default eventService;
 // or you can choose to connect manually at a later point (e.g., after login)
 // eventService.connect();
 // For now, let's make connection explicit, e.g. in App.tsx useEffect
-
-[end of packages/ultracontrol-app/src/lib/services/EventService.ts]
