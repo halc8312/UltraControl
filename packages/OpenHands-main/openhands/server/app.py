@@ -28,6 +28,7 @@ from openhands.server.routes.secrets import app as secrets_router
 from openhands.server.routes.security import app as security_api_router
 from openhands.server.routes.settings import app as settings_router
 from openhands.server.routes.trajectory import app as trajectory_router
+from openhands.server.routes.websocket_events import router as websocket_events_router # WebSocket Events Router
 from openhands.server.shared import conversation_manager
 
 mcp_app = mcp_server.http_app(path='/mcp')
@@ -70,4 +71,5 @@ app.include_router(settings_router)
 app.include_router(secrets_router)
 app.include_router(git_api_router)
 app.include_router(trajectory_router)
+app.include_router(websocket_events_router) # Register WebSocket Events Router
 add_health_endpoints(app)
