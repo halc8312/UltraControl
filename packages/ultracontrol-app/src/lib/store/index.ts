@@ -152,24 +152,16 @@ console.log('Nanostores for UltraControl initialized with new structure.');
 // addNotification('Welcome to UltraControl!', 'info');
 // setTheme('dark');
 
-// --- Placeholder Store Actions for EventService Integration ---
-// These functions will be properly implemented in the next step to update Nanostores.
-// For now, they serve as placeholders for type checking with EventService.ts.
+// --- Store Actions for EventService Integration ---
 
 export const setDevinTasks = (tasks: DevinTask[]) => {
-  console.log('[Store Placeholder] setDevinTasks called with:', tasks);
-  // Actual implementation: devinTasks.set(tasks);
-  devinTasks.set(tasks); // Let's use the actual store setter
+  devinTasks.set(tasks);
 };
 
-// Note: updateDevinTask, addDevinTask, removeDevinTask are already defined above
-// and seem to match the required signatures.
-// We just need to ensure they are correctly used by EventService.
-// If EventService expects a different signature, we might need adapters or new functions.
-// For now, we assume the existing ones are sufficient or will be adapted.
+export const setBoltSessions = (sessions: BoltSession[]) => {
+  boltSessions.set(sessions);
+};
 
-// Example for other types if needed:
-// export const setBoltSessions = (sessions: BoltSession[]) => {
-//   console.log('[Store Placeholder] setBoltSessions called with:', sessions);
-//   boltSessions.set(sessions);
-// };
+export const setOpenHandsAgents = (agents: OpenHandsAgent[]) => {
+  openHandsAgents.set(agents);
+};

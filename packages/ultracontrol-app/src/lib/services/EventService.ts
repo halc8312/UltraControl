@@ -6,17 +6,24 @@ import type { StateUpdateMessage } from '../interfaces/state'; // Import StateUp
 import { StateType } from '../interfaces/state'; // Import StateType
 import {
   addNotification,
-  // Import store actions for updating states based on StateUpdateMessage
-  // Example: updateDevinTaskInStore, addBoltSessionInStore, etc.
-  // These will be more concretely defined once we see the store's structure.
-  // For now, we'll assume they exist or create placeholders.
-  // --- Placeholder store actions for demonstration ---
-  // These should be replaced by actual store actions from '~/lib/store'
-  updateDevinTask as updateDevinTaskInStore,
-  addDevinTask as addDevinTaskInStore,
-  removeDevinTask as removeDevinTaskInStore,
-  setDevinTasks as setDevinTasksInStore,
-  // TODO: Add similar imports for BoltSession, OpenHandsAgent, UserPreferences etc.
+  // DevinTask actions
+  updateDevinTask,
+  addDevinTask,
+  removeDevinTask,
+  setDevinTasks,
+  // BoltSession actions
+  addBoltSession,
+  updateBoltSession,
+  removeBoltSession,
+  boltSessions,
+  // OpenHandsAgent actions
+  addOpenHandsAgent,
+  updateOpenHandsAgent,
+  removeOpenHandsAgent,
+  openHandsAgents,
+  // UserPreferences actions
+  userPreferences,
+  setTheme,
 } from '../store';
 
 const WS_URL = import.meta.env.VITE_WS_EVENTS_URL || 'ws://localhost:8000/ws/events'; // Example URL
@@ -30,11 +37,13 @@ class EventService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectInterval = 5000; // 5 seconds
+  private clientId: string = this.generateClientId();
 
   private actionCallbacks: Array<EventCallback<ActionPayload>> = [];
   private observationCallbacks: Array<EventCallback<ObservationPayload>> = [];
   private notificationCallbacks: Array<EventCallback<NotificationEventPayload>> = [];
   private systemCallbacks: Array<EventCallback<SystemEventPayload>> = [];
+  private stateUpdateCallbacks: Array<EventCallback<StateUpdateMessage<any>>> = [];
 
   constructor() {
     // Bind methods to ensure 'this' context is correct
@@ -62,8 +71,12 @@ class EventService {
     console.log('WebSocket connection established.');
     isEventServiceConnected.set(true);
     this.reconnectAttempts = 0;
-    // Optionally send a system event to the server upon connection
-    // this.sendSystemEvent('ClientConnected', { clientId: 'unique-client-id' });
+    
+    // Request state synchronization from server
+    this.sendSystemEvent('RequestStateSync', {
+      clientId: this.getClientId(),
+      stateTypes: Object.values(StateType),
+    });
   }
 
   private handleMessage(event: MessageEvent): void {
@@ -116,24 +129,51 @@ class EventService {
     console.log(`Handling state update for ${message.stateType}`, message);
     switch (message.stateType) {
       case StateType.DevinTask:
-        // These would be actual functions imported from the store actions
         if (message.action === 'add' && message.payload) {
-          addDevinTaskInStore(message.payload as any); // Cast as any for placeholder
+          addDevinTask(message.payload as any);
         } else if (message.action === 'update' && message.entityId && message.payload) {
-          updateDevinTaskInStore({ id: message.entityId, ...(message.payload as any) });
+          updateDevinTask({ id: message.entityId, ...(message.payload as any) });
         } else if (message.action === 'remove' && message.entityId) {
-          removeDevinTaskInStore(message.entityId);
+          removeDevinTask(message.entityId);
         } else if (message.action === 'set_all' && Array.isArray(message.payload)) {
-          setDevinTasksInStore(message.payload as any[]);
+          setDevinTasks(message.payload as any[]);
         }
         break;
-      // TODO: Add cases for StateType.BoltSession, StateType.OpenHandsAgent, StateType.UserPreferences etc.
-      // Example for BoltSession:
-      // case StateType.BoltSession:
-      //   if (message.action === 'add' && message.payload) {
-      //     addBoltSessionInStore(message.payload as BoltSession);
-      //   } ...
-      //   break;
+        
+      case StateType.BoltSession:
+        if (message.action === 'add' && message.payload) {
+          addBoltSession(message.payload as any);
+        } else if (message.action === 'update' && message.entityId && message.payload) {
+          updateBoltSession({ id: message.entityId, ...(message.payload as any) });
+        } else if (message.action === 'remove' && message.entityId) {
+          removeBoltSession(message.entityId);
+        } else if (message.action === 'set_all' && Array.isArray(message.payload)) {
+          boltSessions.set(message.payload as any[]);
+        }
+        break;
+        
+      case StateType.OpenHandsAgent:
+        if (message.action === 'add' && message.payload) {
+          addOpenHandsAgent(message.payload as any);
+        } else if (message.action === 'update' && message.entityId && message.payload) {
+          updateOpenHandsAgent({ id: message.entityId, ...(message.payload as any) });
+        } else if (message.action === 'remove' && message.entityId) {
+          removeOpenHandsAgent(message.entityId);
+        } else if (message.action === 'set_all' && Array.isArray(message.payload)) {
+          openHandsAgents.set(message.payload as any[]);
+        }
+        break;
+        
+      case StateType.UserPreferences:
+        if (message.action === 'update' && message.payload) {
+          const prefs = message.payload as any;
+          if (prefs.theme !== undefined) {
+            setTheme(prefs.theme);
+          }
+          // Add other preference updates as needed
+        }
+        break;
+        
       default:
         console.warn(`No handler for state type: ${message.stateType}`);
     }
@@ -204,6 +244,12 @@ class EventService {
     this.sendMessage(payload);
   }
 
+  sendStateUpdate<T>(stateUpdate: StateUpdateMessage<T>): void {
+    // Cast to any to bypass WebSocketMessage type check
+    // StateUpdateMessage is a different message type than the standard event types
+    this.sendMessage(stateUpdate as any);
+  }
+
 
   // --- Subscription methods ---
   onAction(callback: EventCallback<ActionPayload>): () => void {
@@ -239,6 +285,15 @@ class EventService {
     return () => {
       this.systemCallbacks = this.systemCallbacks.filter(cb => cb !== callback);
     };
+  }
+
+  private generateClientId(): string {
+    // Generate a unique client ID for this session
+    return `client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  private getClientId(): string {
+    return this.clientId;
   }
 }
 
