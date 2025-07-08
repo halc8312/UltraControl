@@ -51,10 +51,14 @@ export interface RuntimeConfig {
 export abstract class RuntimeEnvironment {
   protected config: RuntimeConfig;
   protected capabilities: RuntimeCapabilities;
+  public readonly type: RuntimeType;
+  public readonly id: string;
   
   constructor(config: RuntimeConfig) {
     this.config = config;
     this.capabilities = this.defineCapabilities();
+    this.type = config.type;
+    this.id = `runtime-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   
   /**
@@ -652,5 +656,45 @@ export class RuntimeManager {
     
     await Promise.all(cleanupPromises);
     this.runtimes.clear();
+  }
+
+  // Additional methods for test compatibility
+  async initialize(): Promise<void> {
+    // Initialize default runtimes
+    await this.createRuntime('default-webcontainer', {
+      type: 'webcontainer',
+      workDir: '/workspace'
+    });
+    
+    await this.createRuntime('default-docker', {
+      type: 'docker',
+      workDir: '/app'
+    });
+  }
+
+  async selectRuntime(criteria: {
+    type: string;
+    requirements?: string[];
+  }): Promise<RuntimeEnvironment> {
+    const runtime = this.selectRuntimeForTask({
+      type: criteria.type as any,
+      requiredCapabilities: criteria.requirements
+    });
+
+    if (!runtime) {
+      // Create a new runtime if none exists
+      const runtimeType = criteria.type === 'frontend' ? 'webcontainer' : 'docker';
+      const newRuntime = await this.createRuntime(`runtime-${Date.now()}`, {
+        type: runtimeType,
+        workDir: '/workspace'
+      });
+      return newRuntime;
+    }
+
+    return runtime;
+  }
+
+  async dispose(): Promise<void> {
+    await this.cleanupAll();
   }
 }

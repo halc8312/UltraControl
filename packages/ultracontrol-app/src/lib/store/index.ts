@@ -44,6 +44,13 @@ export const integratedWorkspace = map<IntegratedWorkspace>({
   activeProjectId: null,
 });
 
+// --- Project Management ---
+export const currentProject = atom<any>(null);
+
+// --- Error Management ---
+export const systemErrors = atom<any[]>([]);
+export const recoveryAttempts = atom<any[]>([]);
+
 // --- Helper Functions / Actions ---
 
 // Loading State

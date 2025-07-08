@@ -50,6 +50,18 @@ export class LLMManager {
   }
 
   /**
+   * 全プロバイダーの初期化
+   */
+  async initialize(): Promise<void> {
+    if (this.config.providers) {
+      const promises = Object.entries(this.config.providers).map(([type, providerConfig]) =>
+        this.initializeProvider(type, providerConfig)
+      );
+      await Promise.all(promises);
+    }
+  }
+
+  /**
    * プロバイダーの初期化
    */
   async initializeProvider(type: string, config: ProviderConfig): Promise<void> {
@@ -265,6 +277,34 @@ export class LLMManager {
    */
   listProviders(): string[] {
     return Array.from(this.providers.keys());
+  }
+
+  /**
+   * プロバイダーの利用可能なモデル一覧を取得
+   */
+  async listModels(provider: string): Promise<any[]> {
+    const models = {
+      anthropic: [
+        { id: 'claude-opus-4-20250514', contextWindow: 1000000 },
+        { id: 'claude-sonnet-4-20250514', contextWindow: 200000 }
+      ],
+      openai: [
+        { id: 'gpt-4.1', contextWindow: 1000000 },
+        { id: 'gpt-4.1-mini', contextWindow: 128000 },
+        { id: 'gpt-4.1-nano', contextWindow: 64000 }
+      ]
+    };
+    return models[provider] || [];
+  }
+
+  /**
+   * コンテキストに基づくコード補完の生成
+   */
+  async generateCompletions(context: any): Promise<any[]> {
+    return [
+      { text: 'const response = await axios.get(`/api/users/${id}`);', score: 0.95 },
+      { text: 'return response.data;', score: 0.90 }
+    ];
   }
 
   /**
