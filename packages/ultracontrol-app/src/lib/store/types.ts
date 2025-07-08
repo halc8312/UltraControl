@@ -12,6 +12,13 @@ export interface Notification {
 export interface BoltSession {
   id: string;
   name: string;
+  agentId?: string;
+  projectId?: string;
+  startTime?: Date;
+  endTime?: Date;
+  status?: 'active' | 'completed' | 'failed' | 'paused';
+  tasks?: any[];
+  artifacts?: any[];
   // 必要に応じて他のプロパティを追加
   // 例: createdAt: Date, lastModifiedAt: Date, messages: Message[]
 }
@@ -20,10 +27,17 @@ export interface BoltSession {
 export type DevinTaskStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 
 export interface DevinTask {
-  id:string;
+  id: string;
   title: string;
   description: string;
   status: DevinTaskStatus;
+  assignedAgent?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  dependencies?: string[];
+  result?: any;
+  type?: string;
+  priority?: number;
   // 必要に応じて他のプロパティを追加
   // 例: subTasks: DevinSubTask[], priority: number
 }
@@ -32,7 +46,15 @@ export interface DevinTask {
 export interface OpenHandsAgent {
   id: string;
   name: string;
-  status: 'idle' | 'running' | 'stopped' | 'error';
+  status: 'idle' | 'running' | 'stopped' | 'error' | 'active' | 'busy';
+  type?: string;
+  capabilities?: string[];
+  currentTasks?: any[];
+  resourceUsage?: {
+    cpu: number;
+    memory: number;
+    gpu?: number;
+  };
   // 必要に応じて他のプロパティを追加
   // 例: currentGoal: string, history: string[]
 }
